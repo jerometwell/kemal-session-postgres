@@ -1,12 +1,6 @@
 # kemal-session-postgres
 
-[![Build Status](https://travis-ci.org/iomcr/kemal-session-postgres.svg?branch=master)](https://travis-ci.org/crisward/kemal-session-postgres)
-
 This is a postgres adaptor for [Kemal Session](https://github.com/kemalcr/kemal-session)
-
-## NOTE
-
-This is a ctrl+f replace fork of `kemal-session-mysql`. I am using it until I need to switch to redis for sessions in the future. I have not updated the tests (yet).
 
 
 ## Installation
@@ -24,7 +18,7 @@ dependencies:
 ```crystal
 require "kemal"
 require "kemal-session-postgres"
-require "postgres"
+require "pg"
 
 # connect to postgres, update url with your connection info (or perhaps use an ENV var)
 connection = DB.open "postgres://root@localhost/test?sslmode=require"
