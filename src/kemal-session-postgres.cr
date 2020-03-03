@@ -71,7 +71,7 @@ module Kemal
       def run_gc
         # delete old sessions here
         expiretime = Time.local - Kemal::Session.config.timeout
-        sql = "delete from #{@sessiontable} where updated_at < $1"
+        sql = "DELETE FROM #{@sessiontable} WHERE updated_at < $1;"
         @connection.exec(sql, expiretime)
         # delete old memory cache too, if it exists and is too old
         @cache.each do |session_id, session|
@@ -84,7 +84,7 @@ module Kemal
 
       def all_sessions : Array(StorageInstance)
         array = [] of StorageInstance
-        sql = "select data from #{@sessiontable} "
+        sql = "SELECT data FROM #{@sessiontable};"
         sessions = @connection.query_all(sql) do |rs|
           json = rs.read(String)
           StorageInstance.from_json(json)
@@ -94,19 +94,19 @@ module Kemal
       def create_session(session_id : String)
         session = StorageInstance.new
         data = session.to_json
-        sql = "insert into #{@sessiontable} (session_id,data,updated_at) values($1,$2,NOW()) on conflict (session_id) do update set data = excluded.data, updated_at = excluded.updated_at"
+        sql = "INSERT INTO #{@sessiontable} (session_id,data,updated_at) VALUES($1,$2,NOW()) ON CONFLICT (session_id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at;"
         @connection.exec(sql, session_id, data)
         return session
       end
 
       def save_cache(session_id)
         data = @cache[session_id].to_json
-        sql = "update #{@sessiontable} set data=$1,updated_at=NOW() where session_id = $2 "
+        sql = "UPDATE #{@sessiontable} SET data = $1, updated_at = NOW() WHERE session_id = $2;"
         res = @connection.exec(sql, data, session_id)
       end
 
       def each_session
-        sql = "select data from #{@sessiontable} "
+        sql = "SELECT data FROM #{@sessiontable};"
         @connection.query_each(sql) do |rs|
           json = rs.read(String)
           yield StorageInstance.from_json(json)
@@ -118,7 +118,7 @@ module Kemal
       end
 
       def session_exists?(session_id : String) : Bool
-        sql = "select session_id from #{@sessiontable} where session_id = $1"
+        sql = "SELECT session_id FROM #{@sessiontable} WHERE session_id = $1;"
         begin
           @connection.scalar(sql, session_id)
           return true
@@ -128,24 +128,24 @@ module Kemal
       end
 
       def destroy_session(session_id : String)
-        sql = "delete from #{@sessiontable} where session_id = $1"
+        sql = "DELETE FROM #{@sessiontable} WHERE session_id = $1;"
         @connection.exec(sql, session_id)
       end
 
       def destroy_all_sessions
-        @connection.exec("truncate table #{@sessiontable}")
+        @connection.exec("TRUNCATE TABLE #{@sessiontable};")
       end
 
       def load_into_cache(session_id : String) : StorageInstance
         begin
-          json = @connection.query_one "select data from #{@sessiontable} where session_id = $1", session_id, &.read(String)
+          json = @connection.query_one "SELECT data FROM #{@sessiontable} WHERE session_id = $1;", session_id, &.read(String)
           @cache[session_id] = StorageInstance.from_json(json.to_s)
         rescue ex
           # recreates session based on id, if it has been deleted?
           @cache[session_id] = create_session(session_id)
         end
         @cached_session_read_times[session_id] = Time.utc
-        @connection.exec("update #{@sessiontable} set updated_at = NOW() where session_id = $1", session_id)
+        @connection.exec("UPDATE #{@sessiontable} SET updated_at = NOW() WHERE session_id = $1;", session_id)
         @cache[session_id]
       end
 

@@ -6,7 +6,7 @@ authors:
 
 dependencies:
   kemal-session:
-    github: kemalcr/kemal-session
+    github: mang/kemal-session
   pg:
     github: will/crystal-pg
 

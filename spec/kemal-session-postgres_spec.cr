@@ -69,10 +69,10 @@ describe "Kemal::Session::PostgresEngine" do
   describe ".destroy" do
     it "should remove session from mysql" do
       session = Kemal::Session.new(create_context(SESSION_ID))
-      value = Db.scalar("select count(session_id) from sessions where session_id = ?", SESSION_ID)
+      value = Db.scalar("select count(session_id) from sessions where session_id = $1", SESSION_ID)
       value.should eq(1)
       session.destroy
-      value = Db.scalar("select count(session_id) from sessions where session_id = ?", SESSION_ID)
+      value = Db.scalar("select count(session_id) from sessions where session_id = $1", SESSION_ID)
       value.should eq(0)
     end
   end
@@ -80,16 +80,16 @@ describe "Kemal::Session::PostgresEngine" do
   describe "#destroy" do
     it "should remove session from mysql" do
       session = Kemal::Session.new(create_context(SESSION_ID))
-      value = Db.scalar("select count(session_id) from sessions where session_id = ?", SESSION_ID)
+      value = Db.scalar("select count(session_id) from sessions where session_id = $1", SESSION_ID)
       value.should eq(1)
       Kemal::Session.destroy(SESSION_ID)
-      value = Db.scalar("select count(session_id) from sessions where session_id = ?", SESSION_ID)
+      value = Db.scalar("select count(session_id) from sessions where session_id = $1", SESSION_ID)
       value.should eq(0)
     end
 
     it "should succeed if session doesnt exist in mysql" do
       session = Kemal::Session.new(create_context(SESSION_ID))
-      value = Db.scalar("select count(session_id) from sessions where session_id = ?", SESSION_ID)
+      value = Db.scalar("select count(session_id) from sessions where session_id = $1", SESSION_ID)
       value.should eq(1)
       Kemal::Session.destroy(SESSION_ID).should be_truthy
     end
@@ -125,7 +125,7 @@ describe "Kemal::Session::PostgresEngine" do
   describe "#create" do
     it "should build an empty session" do
       Kemal::Session.config.engine.create_session(SESSION_ID)
-      value = Db.scalar("select count(session_id) from sessions where session_id = ?", SESSION_ID)
+      value = Db.scalar("select count(session_id) from sessions where session_id = $1", SESSION_ID)
       value.should eq(1)
     end
   end
