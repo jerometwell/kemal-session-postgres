@@ -4,6 +4,10 @@ version: 0.1.0
 authors:
   - IOM <>
 
+targets:
+    kemal-session-postgres:
+      main: src/kemal-session-postgres.cr
+
 dependencies:
   kemal-session:
     github: mang/kemal-session

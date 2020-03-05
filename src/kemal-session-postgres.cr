@@ -57,13 +57,14 @@ module Kemal
 
       def initialize(@connection : DB::Database, @sessiontable : String = "sessions", @cachetime : Int32 = 5)
         # check if table exists, if not create it
-        sql = "CREATE TABLE IF NOT EXISTS #{@sessiontable} (
-            \"session_id\" varchar(36) NOT NULL,
-            \"data\" text,
-            \"updated_at\" timestamp DEFAULT NULL,
-            PRIMARY KEY (\"session_id\")
-          ); "
-        @connection.exec(sql)
+        @connection.exec(%{
+          CREATE TABLE IF NOT EXISTS #{@sessiontable} (
+            "session_id" varchar(36) NOT NULL,
+            "data" text,
+            "updated_at" timestamp DEFAULT NULL,
+            PRIMARY KEY ("session_id")
+          );
+        })
         @cache = {} of String => StorageInstance
         @cached_session_read_times = {} of String => Time
       end

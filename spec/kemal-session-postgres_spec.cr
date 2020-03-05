@@ -1,7 +1,38 @@
 require "./spec_helper"
 
 describe "Kemal::Session::PostgresEngine" do
-  # TODO: confirm the table name is used...
+  before_each do
+    Kemal::Session.config.secret = "a_secret"
+    Kemal::Session.config.engine = Kemal::Session::PostgresEngine.new(connection: DATABASE)
+  end
+
+  after_each do
+    DATABASE.exec("DROP TABLE IF EXISTS sessions;")
+  end
+
+  describe "When a custom sessiontable is used" do
+    before_each do
+      Kemal::Session.config.engine = Kemal::Session::PostgresEngine.new(
+        connection: DATABASE,
+        sessiontable: "a_totally_different_table"
+      )
+    end
+
+    it "should retrieve a saved value" do
+      session = Kemal::Session.new(create_context(SESSION_ID))
+      session.int("i", 52)
+
+      db_session = JSON.parse(get_from_db(SESSION_ID, "a_totally_different_table"))
+
+      db_session["ints"]["i"].should eq 52
+      session.int("i").should eq 52
+    end
+
+    after_each do
+      DATABASE.exec("DROP TABLE IF EXISTS a_totally_different_table;")
+    end
+  end
+
   describe ".int" do
     it "can save a value" do
       session = Kemal::Session.new(create_context(SESSION_ID))
@@ -69,10 +100,10 @@ describe "Kemal::Session::PostgresEngine" do
   describe ".destroy" do
     it "should remove session from mysql" do
       session = Kemal::Session.new(create_context(SESSION_ID))
-      value = Db.scalar("select count(session_id) from sessions where session_id = $1", SESSION_ID)
+      value = DATABASE.scalar("select count(session_id) from sessions where session_id = $1", SESSION_ID)
       value.should eq(1)
       session.destroy
-      value = Db.scalar("select count(session_id) from sessions where session_id = $1", SESSION_ID)
+      value = DATABASE.scalar("select count(session_id) from sessions where session_id = $1", SESSION_ID)
       value.should eq(0)
     end
   end
@@ -80,16 +111,16 @@ describe "Kemal::Session::PostgresEngine" do
   describe "#destroy" do
     it "should remove session from mysql" do
       session = Kemal::Session.new(create_context(SESSION_ID))
-      value = Db.scalar("select count(session_id) from sessions where session_id = $1", SESSION_ID)
+      value = DATABASE.scalar("select count(session_id) from sessions where session_id = $1", SESSION_ID)
       value.should eq(1)
       Kemal::Session.destroy(SESSION_ID)
-      value = Db.scalar("select count(session_id) from sessions where session_id = $1", SESSION_ID)
+      value = DATABASE.scalar("select count(session_id) from sessions where session_id = $1", SESSION_ID)
       value.should eq(0)
     end
 
     it "should succeed if session doesnt exist in mysql" do
       session = Kemal::Session.new(create_context(SESSION_ID))
-      value = Db.scalar("select count(session_id) from sessions where session_id = $1", SESSION_ID)
+      value = DATABASE.scalar("select count(session_id) from sessions where session_id = $1", SESSION_ID)
       value.should eq(1)
       Kemal::Session.destroy(SESSION_ID).should be_truthy
     end
@@ -125,7 +156,7 @@ describe "Kemal::Session::PostgresEngine" do
   describe "#create" do
     it "should build an empty session" do
       Kemal::Session.config.engine.create_session(SESSION_ID)
-      value = Db.scalar("select count(session_id) from sessions where session_id = $1", SESSION_ID)
+      value = DATABASE.scalar("select count(session_id) from sessions where session_id = $1", SESSION_ID)
       value.should eq(1)
     end
   end
