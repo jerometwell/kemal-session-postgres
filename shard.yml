@@ -11,6 +11,7 @@ targets:
 dependencies:
   kemal-session:
     github: mang/kemal-session
+    branch: master
   pg:
     github: will/crystal-pg
 
